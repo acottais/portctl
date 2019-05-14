@@ -28,11 +28,11 @@ stages:
       inputs:
         containerRegistry: 'dockerHub'
         command: 'login'
-    - task: Docker@2
-      displayName: push image to dockerHub
+    - task: Bash@3
       inputs:
-       command: push
-       containerRegistry: 'dockerHub'
-       repository: 'acottais'
-       arguments: acottais/portctl:0.1.0
+        targetType: 'inline'
+        script: |
+          docker tag acottais/portctl:0.1.0 acottais/portctl:latest
+          docker push acottais/portctl:0.1.0
+          docker push acottais/portctl:latest
  
