@@ -8,7 +8,7 @@ trigger:
 
 variables:
   vmImageName: 'ubuntu-latest'
-  dockerRegistryServiceConnection: '{{ dockerHub.Id }}'
+
 
 
 stages:
@@ -25,7 +25,14 @@ stages:
       inputs:
        cmakeArgs: image
     - task: Docker@2
+      inputs:
+        containerRegistry: 'dockerHub'
+        command: 'login'
+    - task: Docker@2
       displayName: push image to dockerHub
       inputs:
        command: push
-       containerRegistry: $(dockerRegistryServiceConnection) 
+       containerRegistry: 'dockerHub'
+       repository: 'acottais'
+       arguments: acottais/portctl:0.1.0
+ 
