@@ -8,7 +8,7 @@ trigger:
 
 variables:
   vmImageName: 'ubuntu-latest'
-  dockerRegistryServiceConnection: '{{ containerRegistryConnection.Id }}'
+
 
 
 stages:
@@ -20,12 +20,19 @@ stages:
     pool:
       vmImage: $(vmImageName)
     steps:
-    - task: CMake@1
-      displayName: Build a docker image 
+    - task: Bash@3
       inputs:
-       cmakeArgs: image
+        targetType: 'inline'
+        script: 'make image'
     - task: Docker@2
-      displayName: push image to dockerHub
       inputs:
-       command: push
-       containerRegistry: $(dockerRegistryServiceConnection) 
+        containerRegistry: 'dockerHub'
+        command: 'login'
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          docker tag acottais/portctl:0.1.0 acottais/portctl:latest
+          docker push acottais/portctl:0.1.0
+          docker push acottais/portctl:latest
+ 
