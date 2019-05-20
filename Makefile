@@ -12,6 +12,7 @@ BUILD_DATE        :=  $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
 
 DEP_VERSION       :=  0.5.3
 BUILD_DIR         :=  build
+RELEASE_DIR       :=  release
 PORTAINER_VERSION :=  1.20.2
 DOCKER_VERSION    :=  1.40
 
@@ -83,6 +84,10 @@ fmt:
 image:
 	docker build -t $(IMAGE_NAME):$(VERSION) .
 
+binaries: dep
+	GOOS=darwin GOARCH=amd64 go build -o $(RELEASE_DIR)/portctl.$(VERSION).darwin.amd64 -ldflags=$(GO_LDFLAGS)
+	GOOS=linux GOARCH=amd64 go build -o $(RELEASE_DIR)/portctl.$(VERSION).linux.amd64 -ldflags=$(GO_LDFLAGS)
+	GOOS=windows GOARCH=amd64 go build -o $(RELEASE_DIR)/portctl.$(VERSION).windows.amd64 -ldflags=$(GO_LDFLAGS)
 
 # This is pretty much an optional thing that I tend always to include.
 #
@@ -93,8 +98,8 @@ image:
 # `tag` created in GitHub with multiple builds if you wish. 
 #
 # See more at `gorelease` github repo.
-release:
-	git tag -a $(VERSION) -m "Release $(VERSION)" || true
+release: binaries image
+	git tag -a v$(VERSION) -m "Release $(VERSION)" || true
 	git push origin $(VERSION)
 
-.PHONY: install test fmt release dep build
+.PHONY: install test fmt release dep build image binaries

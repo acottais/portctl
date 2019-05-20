@@ -19,6 +19,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
@@ -54,7 +55,29 @@ var loginCmd = &cobra.Command{
 			username = strings.TrimRight(readname, "\r\n")
 		}
 		password, _ := cmd.Flags().GetString("password")
-		if password == "" {
+		passwordEnv, _ := cmd.Flags().GetString("password-env")
+		passwordFile, _ := cmd.Flags().GetString("password-file")
+		passwordCount := 0
+		if password != "" {
+			passwordCount++
+		}
+		if passwordEnv != "" {
+			passwordCount++
+			password = os.Getenv(passwordEnv)
+		}
+		if passwordFile != "" {
+			passwordCount++
+			passwordByte, err := ioutil.ReadFile(passwordFile)
+			if err != nil {
+				fmt.Println(err)
+				return nil
+			}
+			password = string(passwordByte)
+		}
+		if passwordCount > 1 {
+			return fmt.Errorf("only one of password, password-env or password-file is expected")
+		}
+		if passwordCount == 0 {
 			print("Password: ")
 			bytesPassword, _ := terminal.ReadPassword(int(syscall.Stdin))
 			password = string(bytesPassword)
@@ -124,5 +147,7 @@ func init() {
 	// is called directly, e.g.:
 	loginCmd.Flags().StringP("username", "u", "", "Username")
 	loginCmd.Flags().StringP("password", "p", "", "Password")
+	loginCmd.Flags().String("password-env", "", "read the password from an environment variable")
+	loginCmd.Flags().String("password-file", "", "read the password from a file")
 	loginCmd.Flags().Bool("basic", false, "force the HTTP Basic authentication mode. Use this if Portainer is behind a reverse proxy handling the authentication")
 }
