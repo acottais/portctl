@@ -105,16 +105,17 @@ var createStackCmd = &cobra.Command{
 		}
 		fmt.Println("calling create stack")
 		result, err := portainercli.Stacks.StackCreate(stackParams, nil)
-
 		rc, err := portainer.CheckPortainerError(err)
 		switch rc {
 		case 409:
 			fmt.Printf("Error: Stack with name %s already exist\n", stackName)
 			return nil
 		case 0:
+			fallthrough
 		default:
 			if err != nil {
-				return err
+				fmt.Println(err)
+				return nil
 			}
 		}
 

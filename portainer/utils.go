@@ -86,30 +86,34 @@ type portainererror struct {
 // It returns 0 when the error is handled or the http error code otherwise
 func CheckPortainerError(err error) (int, error) {
 	if err != nil {
+		switch errType := err.(type) {
+		case *runtime.APIError:
+			if errType.Code == 401 {
 
-		if err, ok := err.(*runtime.APIError); ok {
-			if err.Code == 401 {
-
-				return err.Code, errors.New("Error: Portainer server requires login. Use portctl login")
+				return errType.Code, errors.New("Error: Portainer server requires login. Use portctl login")
 			}
-			if err.Code == 403 {
+			if errType.Code == 403 {
 
-				return err.Code, errors.New("Error: access denied. You may not have the correct authorization")
+				return errType.Code, errors.New("Error: access denied. You may not have the correct authorization")
 			}
-			if err.Code >= 500 {
+			if errType.Code >= 500 {
 
-				return err.Code, errors.New("Error: Portainer Server Error")
+				return errType.Code, errors.New("Error: Portainer Server Error")
 			}
 			var message string
-			switch t := err.Response.(type) {
+			switch t := errType.Response.(type) {
 			default:
 				message = fmt.Sprintf("unexpected type %T\n", t) // %T prints whatever type t has
 			case portainererror:
-				message = t.details // t has type bool
+				message = t.details
 			}
-			return err.Code, errors.New(message)
+			return errType.Code, errors.New(message)
+		case *stacks.StackCreateInternalServerError:
+			return 0, errors.New(errType.Payload.Err)
+		default:
+
+			return 0, errors.New(errType.Error())
 		}
-		return 0, err
 	}
 	return 0, nil
 }

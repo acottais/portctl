@@ -1,0 +1,17 @@
+# Use postgres/example user/password credentials
+version: '3.5'
+
+services:
+
+  db:
+    image: postgres:${VERSION}
+    environment:
+      POSTGRES_PASSWORD: ${PASSWORD}
+
+  adminer:
+    image: adminer
+
+
+configs:
+  readme:
+    file: README.md
